@@ -1,51 +1,25 @@
-const app = require('express')();
-const axios = require('axios');
+// TAPMAD SCRAPER (EXPERIMENTAL)
+// Add this logic inside your existing Vercel script
 
-app.get('/', async (req, res) => {
-    // Channel ID URL se lein
-    const channelId = req.query.id || 'tamasha-life-hd';
-    const targetUrl = `https://tamashaweb.com/live-tv/${channelId}`;
-
+if (id === 'ten-sports-tapmad') {
+    const tapmadUrl = 'https://www.tapmad.com/play/ten-sports'; // URL check karein
     try {
-        const response = await axios.get(targetUrl, {
+        const response = await axios.get(tapmadUrl, {
             headers: {
-                // Headers very important hain taaki Tamasha ko lage ye real browser hai
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Referer': 'https://tamashaweb.com/',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5'
+                'Referer': 'https://www.tapmad.com/'
             }
         });
-
-        const html = response.data;
-
-        // NEW POWERFUL REGEX: Ye JSON format aur Normal format dono dhundega
-        // Pattern: Find http(s)://.....m3u8....wmsAuthSign=...
-        const regex = /https?:\\?\/\\?\/[^"'\s]+\.m3u8[^"'\s]*wmsAuthSign=[^"'\s]*/g;
         
-        const matches = html.match(regex);
-
-        if (matches && matches.length > 0) {
-            // Sabse lamba link usually best hota hai (Chunks vs Master playlist)
-            // Slashes ko fix karein (https:\/\/ -> https://)
-            let streamUrl = matches[0].replace(/\\\//g, '/');
-            
-            // User ko redirect karein
-            res.redirect(streamUrl);
-        } else {
-            // Agar link na mile to error print karein
-            console.error("Regex match failed for ID:", channelId);
-            res.status(404).json({ 
-                error: 'Stream link not found.', 
-                details: 'Tamasha structure might have changed or Geo-block active.',
-                channel: channelId
-            });
+        // Tapmad ka M3U8 Pattern
+        const regex = /(https?:\/\/[^"]+\.m3u8[^"]*)/;
+        const match = response.data.match(regex);
+        
+        if (match) {
+            res.redirect(match[1]);
+            return;
         }
-
-    } catch (error) {
-        console.error("Axios Error:", error.message);
-        res.status(500).send('Server Error: ' + error.message);
+    } catch (e) {
+        console.log("Tapmad Error");
     }
-});
-
-module.exports = app;
+}
